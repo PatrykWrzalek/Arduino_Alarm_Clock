@@ -131,8 +131,8 @@ void setup()
 
   Serial.begin(115200);
 
-  DDRB = 0b00000000;  // Initialize PINs which we used from PORT C
-  PORTB = (1 << PB1); // Enable internal pullup resistor to INPUT PC0, PC1, PC2
+  DDRB = (0 << PB1) | (0 << PB2);  // Initialize PINs which we used from PORT C
+  PORTB = (1 << PB1) | (1 << PB2); // Enable internal pullup resistor to INPUT PC0, PC1, PC2
 
   pinMode(potentiometer, INPUT);
 
@@ -141,7 +141,10 @@ void setup()
   TCNT1 = 0x00;       // Reset timer1
   OCR1A = PRESCALER2; // Set output compare for interrupt period of 1sec
   TIMSK1 = 0x02;      // Enable output compare match interrupt A
-  sei();              // Enable global interrupts
+
+  PCICR = (1 << 0); // Enable pin change interrupt on PIN2 of PORT B
+  PCMSK0 = (1 << PB2);
+  sei(); // Enable global interrupts
 
   /*for (int y=0; y<20; y++) //Checking the rounding performed by abs()
   {
@@ -185,4 +188,10 @@ ISR(TIMER1_COMPA_vect)
       time_sec = (1 << 7) | time_sec; // 8th bit are used to do once change displaing value on LCD
     }
   }
+}
+
+ISR(PCINT0_vect)
+{
+  if (PINB & (1 << PB2))
+    state = 1; // if user press Fun_Button go to state=1 which allow to set new time
 }
